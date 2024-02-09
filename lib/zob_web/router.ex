@@ -17,7 +17,7 @@ defmodule ZobWeb.Router do
   scope "/", ZobWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", SpeechLive
   end
 
   # Other scopes may use custom stacks.
