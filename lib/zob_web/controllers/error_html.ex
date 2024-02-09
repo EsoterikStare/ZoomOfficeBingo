@@ -1,9 +1,4 @@
 defmodule ZobWeb.ErrorHTML do
-  @moduledoc """
-  This module is invoked by your endpoint in case of errors on HTML requests.
-
-  See config/config.exs.
-  """
   use ZobWeb, :html
 
   # If you want to customize your error pages,

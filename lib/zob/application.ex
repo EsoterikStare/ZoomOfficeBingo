@@ -8,16 +8,16 @@ defmodule Zob.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      # Start the Telemetry supervisor
       ZobWeb.Telemetry,
-      Zob.Repo,
-      {DNSCluster, query: Application.get_env(:zob, :dns_cluster_query) || :ignore},
+      # Start the PubSub system
       {Phoenix.PubSub, name: Zob.PubSub},
-      # Start the Finch HTTP client for sending emails
+      # Start Finch
       {Finch, name: Zob.Finch},
-      # Start a worker by calling: Zob.Worker.start_link(arg)
-      # {Zob.Worker, arg},
-      # Start to serve requests, typically the last entry
+      # Start the Endpoint (http/https)
       ZobWeb.Endpoint
+      # Start a worker by calling: Zob.Worker.start_link(arg)
+      # {Zob.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

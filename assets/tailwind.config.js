@@ -8,8 +8,8 @@ const path = require("path")
 module.exports = {
   content: [
     "./js/**/*.js",
-    "../lib/zob_web.ex",
-    "../lib/zob_web/**/*.*ex"
+    "../lib/*_web.ex",
+    "../lib/*_web/**/*.*ex"
   ],
   theme: {
     extend: {
@@ -34,16 +34,15 @@ module.exports = {
     // See your `CoreComponents.icon/1` for more information.
     //
     plugin(function({matchComponents, theme}) {
-      let iconsDir = path.join(__dirname, "../deps/heroicons/optimized")
+      let iconsDir = path.join(__dirname, "./vendor/heroicons/optimized")
       let values = {}
       let icons = [
         ["", "/24/outline"],
         ["-solid", "/24/solid"],
-        ["-mini", "/20/solid"],
-        ["-micro", "/16/solid"]
+        ["-mini", "/20/solid"]
       ]
       icons.forEach(([suffix, dir]) => {
-        fs.readdirSync(path.join(iconsDir, dir)).forEach(file => {
+        fs.readdirSync(path.join(iconsDir, dir)).map(file => {
           let name = path.basename(file, ".svg") + suffix
           values[name] = {name, fullPath: path.join(iconsDir, dir, file)}
         })
@@ -51,12 +50,6 @@ module.exports = {
       matchComponents({
         "hero": ({name, fullPath}) => {
           let content = fs.readFileSync(fullPath).toString().replace(/\r?\n|\r/g, "")
-          let size = theme("spacing.6")
-          if (name.endsWith("-mini")) {
-            size = theme("spacing.5")
-          } else if (name.endsWith("-micro")) {
-            size = theme("spacing.4")
-          }
           return {
             [`--hero-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
             "-webkit-mask": `var(--hero-${name})`,
@@ -65,8 +58,8 @@ module.exports = {
             "background-color": "currentColor",
             "vertical-align": "middle",
             "display": "inline-block",
-            "width": size,
-            "height": size
+            "width": theme("spacing.5"),
+            "height": theme("spacing.5")
           }
         }
       }, {values})
