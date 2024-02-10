@@ -161,30 +161,65 @@ defmodule ZobWeb.SpeechLive do
         []
       end
 
-    {:ok, assign(socket, words: words, matches: ["FREE"])}
+    socket =
+      socket
+      |> assign(words: words, matches: MapSet.new(["FREE"]))
+      |> stream(:inputs, [])
+
+    {:ok, socket}
   end
 
   def handle_info({:new_word, new_word}, socket) do
-    tokens = String.split(new_word)
-    |> IO.inspect(label: "tokens")
+    IO.inspect(new_word, label: "whisper input")
+
+    tokens =
+      new_word
+      |> String.replace(~r/[^-a-z' ]/i, "")
+      |> String.split()
+
+    socket =
+      case find_match(tokens) do
+        nil ->
+          IO.puts("no match")
+          socket
+
+        match ->
+          IO.inspect(match, label: "MATCH")
+          assign(socket, matches: MapSet.put(socket.assigns.matches, match))
+      end
+
+    socket = Enum.reduce(tokens, socket, &stream_insert(&2, :inputs, %{id: System.unique_integer([:positive, :monotonic]) , value: &1}, at: 0))
 
     {:noreply, socket}
   end
 
-  def handle_event("new_word", %{"value" => new_word}, socket) do
-    {:noreply, assign(socket, matches: [new_word | socket.assigns.matches])}
+  defp find_match(tokens) do
+    Enum.find(@buzzwords, fn phrase ->
+      phrase
+      |> String.split()
+      |> is_sublist?(tokens)
+    end)
   end
 
+  defp is_sublist?([], _), do: true
+  defp is_sublist?(_, []), do: false
+  defp is_sublist?([h | needle], [h | haystack]), do: is_sublist?(needle, haystack)
+  defp is_sublist?(needle, [_ | haystack]), do: is_sublist?(needle, haystack)
 
   def render(assigns) do
     ~H"""
     <div>
       <h1>Your buzzwords</h1>
+
       <div class="grid grid-cols-5 text-center">
-        <.word word={word} :for={word <- @words} matched={word in @matches}/>
+        <.word word={word} :for={word <- @words} matched={MapSet.member?(@matches, word)}/>
       </div>
 
-      <.input name="new_word" phx-blur="new_word" value=""/>
+      <div id="inputs" phx-update="stream">
+        <div :for={{id, input} <- @streams.inputs} id={id}>
+          <%= input.value %>
+        </div>
+      </div>
     </div>
     """
   end
